@@ -4,6 +4,7 @@ Handles the preprocessing from illumina fastq files throught to consensus genome
 <h3>Currently Loaded Modules:</h3>
   1) gbc-samtools/1.7   2) gbc-bowtie2/2.4.1   3) gbc-cutadapt/1.16   4) htslib/1.2.1   5) gbc-bcftools/1.9
 
+<h3> Step-by-step of install and analysis </h3>
 1. Navigate to the new flowcell data output.
 
 2. git clone this repository 
