@@ -1,26 +1,20 @@
-<h1># fastq-to-treat</h1>
-Handles the preprocessing from illumina fastq files through TREAT using SnakeMake
+<h1># fastq-to-consensus</h1>
+Handles the preprocessing from illumina fastq files throught to consensus genome fasta as compared to a reference genome
 
 1. Navigate to the new flowcell data output.
 
 2. git clone this repository 
 
-    `git clone https://github.com/jebard/fastq-to-treat.git`
+    `git clone https://github.com/UBGBC/fastq-to-consensus`
 
 3. Activate the python anaconda environment (testing on CCR 11-21-19)
 
-    `source fastq-to-treat/bin/activate` 
+    `source fastq-to-consensus/bin/activate` 
 
 4. Edit the config.json file and cluster.json files
 
 
-5. Ensure meta-data table contains all of the necessairy fields (TABBED-DELIMITED:
-
-    `Sample gene  offset  tetracycline knock_down  replicate Adapter_1 Adapter_2 path_to_treat_template  ForwardFastqGZ  ReverseFastqGZ`
-
-Example : 
-
-    `A6_3B_alenaSM_2 A63B    25      FALSE   alenaSM 2  GAAAACACCCATTTTTAGGAGG  GGAGTTATAGAATAAGATCAAATAAG  projects/academic/lread/gene-templates/A63B.fasta A6_3B_alenaSM_2_S20_R1_001.fastq.gz  A6_3B_alenaSM_2_S20_R2_001.fastq.gz`
+5. Ensure meta-data table contains all of the necessairy fields
 
 ** NOTE EXACT HEADERS HAVE TO BE ENFORCED or key errors will be thrown during processing**
 
@@ -32,36 +26,7 @@ Example :
 
 ### The use of --latency-wait allows for SLURM to catch up writing the files and posting the file handles so Snakemake can see them.
 
-    `snakemake --latency-wait 120 -p -j 100 --cluster-config cluster.json --cluster "sbatch --partition cascade --cluster ub-hpc --qos nih --account grp-lread"`
+    `snakemake --latency-wait 120 -p -j 100 --cluster-config cluster.json --cluster "sbatch --partition gbc --cluster faculty --qos gbc --account gbcstaff"`
    
 
-7. Pipeline should result in a treat.db file -- proceed with treat normalization process.
-
-8. Copy over the resulting treat.db file onto your local machine, or a machine that can launch a treat web browser.
-
-9. Run treat.exe --db server (or equivalent command found https://github.com/ubccr/treat)
-
-To launch treat with updated DB
-Copy the new .database file into /lread/dbs
-
-10. Check treats status
-
-`systemctl status treat`
-
-11. Stop the treat service
-
-`sudo systemctl stop treat`
-
-12. Should show treat as stopped
-
-`sudo systemctl status treat`
-
-13. Restart the treat service
-
-`sudo systemctl start treat`
-
-* NOTE:  this will start treat up and will take some time to load.
-
-14. To monitor the service
-
-`sudo journalctl -f -u treat`
+7. Pipeline should result in a consensus.fasta file per sample
