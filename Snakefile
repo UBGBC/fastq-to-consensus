@@ -18,92 +18,68 @@ def get_forward_primer(sample_id):
 def get_reverse_primer(sample_id):
     return df.loc[sample_id]["Adapter_2"]
 
-def get_gene_value(sample_id):
-    return df.loc[sample_id]["gene"]
-
-def get_template_fasta(sample_id):
-    return df.loc[sample_id]["path_to_treat_template"]
-
-def get_offset_value(sample_id):
-    return df.loc[sample_id]["offset"]
-
-def get_replicate_value(sample_id):
-    return df.loc[sample_id]["replicate"]
-
-def get_knockdown_gene(sample_id):
-    return df.loc[sample_id]["knock_down"]
-
-def get_tet_flag(sample_id):
-    return df.loc[sample_id]["tetracycline"]
-
 rule all:
-    input:expand("{dir}/{sample_id}.fa", dir=config["dir_names"]["collapse_dir"],sample_id=sample_ids)
+    input:expand("{dir}/{sample_id}.sorted.bam", dir=config["dir_names"]["sorted_dir"],sample_id=sample_ids)
     run:
         for sample in sample_ids:
-            gene = get_gene_value(sample)
-            offset = get_offset_value(sample)
-            template = get_template_fasta(sample)
-            rep = get_replicate_value(sample)
-            knock = get_knockdown_gene(sample)
-            version = config["tool_version"]["treat"]
-            if (get_tet_flag(sample)):
-                #os.system("./tools/treat/" + str(version) + "/treat load --sample " + sample + " --fasta outputs/collapse/" + sample + ".fa --gene " + gene +" --offset " + str(offset) + " --template "+template+" --replicate "+ str(rep) + " --knock-down " +knock+" --tet")
-                os.system("./tools/treat/" + str(version) + "/treat load --sample " + sample + " --fasta " + config["dir_names"]["collapse_dir"]+"/" + sample + ".fa --gene " + gene +" --offset " + str(offset) + " --template "+template+" --replicate "+ str(rep) + " --exclude-snps --knock-down " +knock+" --tet")
-            else:
-                #os.system("./tools/treat/" + str(version) + "/treat load --sample " + sample + " --fasta outputs/collapse/" + sample + ".fa --gene " + gene +" --offset " + str(offset) + " --template "+template+" --replicate "+ str(rep) + " --knock-down " + knock)
-                os.system("./tools/treat/" + str(version) + "/treat load --sample " + sample + " --fasta " + config["dir_names"]["collapse_dir"]+"/" + sample + ".fa --gene " + gene +" --offset " + str(offset) + " --template "+template+" --replicate "+ str(rep) + " --exclude-snps --knock-down " + knock)
+            print("Wrapping up pipeline")
                    
 rule mkdir:
     output: touch(config["file_names"]["mkdir_done"])
     params: dirs = list(config["dir_names"].values())
     shell: "mkdir -p {params.dirs}"
 
-rule unzip:
-    input: 
-        lambda wildcards: get_pair_gz(wildcards.sample_id),
-        rules.mkdir.output
-    output:
-        config["dir_names"]["unzip_dir"] + "/{sample_id}_R1.fq",
-        config["dir_names"]["unzip_dir"] + "/{sample_id}_R2.fq"
-    shell:
-        "gunzip -c {input[0]} > {output[0]} && gunzip -c {input[1]} > {output[1]}"
-
-rule join:
-    input: rules.unzip.output
-    output: config["dir_names"]["join_dir"] + "/{sample_id}.assembled.fastq"
-    version: config["tool_version"]["pear"]
-    params:
-         outputDir = config["dir_names"]["join_dir"]
-    #shell: "tools/pear/{version}/pear -f {input[0]} -r {input[1]} -o outputs/join/{wildcards.sample_id}"
-    shell: "tools/pear/{version}/pear -f {input[0]} -r {input[1]} -o {params.outputDir}/{wildcards.sample_id}" #outputs/join/{wildcards.sample_id}"
-
-rule filter:
-    input: rules.join.output
-    output: config["dir_names"]["filter_dir"] + "/{sample_id}.fq"
-    version: config["tool_version"]["fastx"]
-    params:
-        percentage = config["parameters"]["quality_filtering"]["percentage"],
-        qscore = config["parameters"]["quality_filtering"]["qscore"]
-    shell: "tools/fastx/{version}/fastq_quality_filter -i {input} -o {output} -q {params.qscore} -p {params.percentage} -Q33 -v"
-
-rule fq_2_fa:
-    input: rules.filter.output
-    output: config["dir_names"]["fq_2_fa_dir"] + "/{sample_id}.fa"
-    version: config["tool_version"]["fastx"]
-    shell: "tools/fastx/{version}/fastq_to_fasta -i {input} -o {output} -n -v -Q33"
-
 rule trim:
-    input: rules.fq_2_fa.output
-    output: config["dir_names"]["trimmed_dir"] + "/{sample_id}.fa"
+    input: 
+        rules.mkdir.output,
+        all_read1 = lambda wildcards: get_pair_gz(wildcards.sample_id)[0],
+        all_read2 = lambda wildcards: get_pair_gz(wildcards.sample_id)[1]
+    output: 
+        trimmed_read1 = config["dir_names"]["trimmed_dir"] + "/{sample_id}.trimmed.R1.fastq.gz",
+        trimmed_read2 = config["dir_names"]["trimmed_dir"] + "/{sample_id}.trimmed.R2.fastq.gz",
+        trimmed_stats = config["dir_names"]["trimmed_dir"] + "/{sample_id}.trimmed.stats"
+
     version: config["tool_version"]["cutadapt"]
     params:
         adapter1=lambda wildcards: get_forward_primer(wildcards.sample_id),
         adapter2=lambda wildcards: get_reverse_primer(wildcards.sample_id)
-    shell: "cutadapt -m 15 -g {params.adapter1} -a {params.adapter2} -n 2 {input} > {output} 2>{output}.stats"
+    shell: "cutadapt -m 15 -a {params.adapter1} -A {params.adapter2} -n 2 -o {output.trimmed_read1} -p {output.trimmed_read2} {input.all_read1} {input.all_read2} 2>{output.trimmed_stats}"
 
-rule collapse:
-    input: rules.trim.output
-    output: config["dir_names"]["collapse_dir"] + "/{sample_id}.fa"
-    version: config["tool_version"]["fastx"]
-    shell: "./tools/fastx/{version}/fastx_collapser -i {input} -o {output} -v"
+rule map:
+    input:
+        p1 = rules.trim.output.trimmed_read1,
+        p2 = rules.trim.output.trimmed_read2
+    output:
+        mapped_bam_file = config["dir_names"]["mapped_dir"] + "/{sample_id}.bam",
+        bt2_log = config["dir_names"]["mapped_dir"] + "/{sample_id}.log"
+    version: config["tool_version"]["bowtie2"]
+    params:
+        threads = config["params"]["bowtie2"]["threads"],
+        map_all = config["params"]["bowtie2"]["all"],
+        reference = config["params"]["bowtie2"]["bowtie2_reference"]
+    shell:
+        """
+        bowtie2 \
+            -x {params.reference} \
+            -1 {input.p1} \
+            -2 {input.p2} \
+            -P {params.threads} \
+            {params.map_all} \
+            --local 2> {output.bt2_log} | \
+                samtools view -bSF4 - > {output.mapped_bam_file}
+        """
+
+rule sort:
+    input:
+        mapped_bam = rules.map.output.mapped_bam_file
+    output:
+        sorted_bam_file = config["dir_names"]["sorted_dir"] + "/{sample_id}.sorted.bam"
+    shell:
+        """
+        samtools view \
+            -bS {input.mapped_bam} | \
+            samtools sort | \
+            samtools view -h > {output.sorted_bam_file}
+        """
+
 

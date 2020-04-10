@@ -1,35 +1,44 @@
 {
-    "raw_fastq_gz_dir": "../C9K8C/fastq/",
-    "meta_file": "meta_data.txt",
+    "raw_fastq_gz_dir": "fastq/",
+    "meta_file": "metadata.txt",
     "tool_version":
     {
         "pear": "0.9.6",
         "fastx": "0.0.13",
         "cutadapt": "1.16",
-        "treat": "0.0.4"
-    },
-    "parameters":
-    {
-        "quality_filtering":
-        {
-            "percentage": "90",
-            "qscore": "0"
-        }
+        "samtools": "1.7",
+        "bowtie2": "2.4.1"
     },
     "file_names":
     {
         "mkdir_done": "mkdir.done",
-        "collapse_done": "collapse.done",
-        "treat_done": "treat.db"
+        "consensus_done": "consensus.done",
     },
     "dir_names":
     {
-        "collapse_dir": "outputs/collapse",
         "trimmed_dir": "outputs/trimmed",
-        "fq_2_fa_dir": "outputs/fq_2_fa",
-        "filter_dir": "outputs/filter",
-        "join_dir": "outputs/join",
-        "unzip_dir": "outputs/unzip",
-        "treat_dir": "outputs/treat"
+        "mapped_dir": "outputs/mapping",
+        "sorted_dir": "outputs/sorted",
+        "variants_dir": "outputs/variants",
+        "consensus_dir": "outputs/consensus"
+    },
+    "params":
+    {
+        "bowtie2":
+            {
+            "threads": "4",
+            "all": "-a",
+            "bowtie2_reference":"tools/reference/bt2-indexes/sars-cov-2"
+            },
+        "mpileup":
+            {
+            "depth": "1000000"
+            },
+        "varscan":
+            {
+            "min_cov": "20",
+            "snp_qual_threshold": "30",
+            "snp_frequency": "0.50"
+            }
     }
 }
