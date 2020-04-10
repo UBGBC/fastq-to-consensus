@@ -1,3 +1,10 @@
+This pipeline is a heavily modified aggregation of two github repositories:
+
+https://github.com/seattleflu/
+https://github.com/jebard/fastq-to-treat
+
+
+
 <h1># fastq-to-consensus</h1>
 Handles the preprocessing from illumina fastq files throught to consensus genome fasta as compared to a reference genome
 
