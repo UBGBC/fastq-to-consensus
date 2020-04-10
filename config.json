@@ -19,7 +19,8 @@
         "trimmed_dir": "outputs/trimmed",
         "mapped_dir": "outputs/mapping",
         "sorted_dir": "outputs/sorted",
-        "variants_dir": "outputs/variants",
+        "mpileup_dir": "outputs/pileups",
+        "varscan_dir": "outputs/varscan",
         "consensus_dir": "outputs/consensus"
     },
     "params":
