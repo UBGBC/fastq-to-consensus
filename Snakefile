@@ -77,14 +77,38 @@ rule sort:
     shell:
         """
         samtools view \
-            -bS {input.mapped_bam} | \
+            -hS {input.mapped_bam} | \
             samtools sort | \
-            samtools view -h > {output.sorted_bam_file}
+            samtools view -hb > {output.sorted_bam_file}
+        """
+
+rule ivar_filter:
+    input:
+        sorted_bam = rules.sort.output.sorted_bam_file,
+        primer_bed = config["params"]["ivar"]["primer_bed"]
+    output:
+        filtered_bam_file = config["dir_names"]["filtered_dir"] + "/{sample_id}.filtered.bam"
+    shell:
+        """
+        ivar trim -i {input.sorted_bam} -b {input.primer_bed} -p {output.filtered_bam_file}
+        """
+
+rule second_sort:
+    input:
+        filtered_bam = rules.ivar_filter.output.filtered_bam_file
+    output:
+        second_sorted_bam_file = config["dir_names"]["filtered_dir"] + "/{sample_id}.filtered.sorted.bam"
+    shell:
+        """
+        samtools view \
+            -hS {input.filtered_bam} | \
+            samtools sort | \
+            samtools view -hb > {output.second_sorted_bam_file}
         """
 
 rule pileup:
     input:
-        sorted_bam = rules.sort.output.sorted_bam_file,
+        second_sorted_bam = rules.second_sort.output.second_sorted_bam_file,
         reference = config["params"]["bowtie2"]["bowtie2_reference"]+".fasta"
     output:
         pileup = config["dir_names"]["mpileup_dir"] + "/{sample_id}.mpileup"
@@ -96,7 +120,7 @@ rule pileup:
         samtools mpileup -a -A \
             -Q {params.min_base_qual} \
             -d {params.depth} \
-            {input.sorted_bam} > {output.pileup} \
+            {input.second_sorted_bam} > {output.pileup} \
             -f {input.reference}
         """
 

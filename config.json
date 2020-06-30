@@ -7,7 +7,8 @@
         "fastx": "0.0.13",
         "cutadapt": "1.16",
         "samtools": "1.7",
-        "bowtie2": "2.4.1"
+        "bowtie2": "2.4.1",
+        "ivar":"1.2.2",
     },
     "file_names":
     {
@@ -21,7 +22,8 @@
         "sorted_dir": "outputs/sorted",
         "mpileup_dir": "outputs/pileups",
         "varscan_dir": "outputs/varscan",
-        "consensus_dir": "outputs/consensus"
+        "consensus_dir": "outputs/consensus",
+        "filtered_dir": "outputs/filtered"
     },
     "params":
     {
@@ -29,17 +31,21 @@
             {
             "threads": "4",
             "all": "-a",
-            "bowtie2_reference":"tools/reference/bt2-indexes/sars-cov-2"
+            "bowtie2_reference":"tools/reference/bt2-indexes/nCoV-2019"
             },
         "mpileup":
             {
-            "depth": "1000000"
+            "depth": "500"
+            },
+        "ivar":
+            {
+            "primer_bed":"tools/reference/nCoV-2019.bed"
             },
         "varscan":
             {
             "min_cov": "20",
             "snp_qual_threshold": "30",
-            "snp_frequency": "0.50"
+            "snp_frequency": "0.33"
             }
     }
 }
