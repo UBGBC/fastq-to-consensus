@@ -52,21 +52,14 @@ rule map:
     output:
         mapped_bam_file = config["dir_names"]["mapped_dir"] + "/{sample_id}.bam",
         bt2_log = config["dir_names"]["mapped_dir"] + "/{sample_id}.log"
-    version: config["tool_version"]["bowtie2"]
+    version: config["tool_version"]["bwa"]
     params:
-        threads = config["params"]["bowtie2"]["threads"],
-        map_all = config["params"]["bowtie2"]["all"],
-        reference = config["params"]["bowtie2"]["bowtie2_reference"]
+        threads = config["params"]["bwa"]["threads"],
+        map_all = config["params"]["bwa"]["all"],
+        reference = config["params"]["bwa"]["bwa_reference"]
     shell:
         """
-        bowtie2 \
-            -x {params.reference} \
-            -1 {input.p1} \
-            -2 {input.p2} \
-            -P {params.threads} \
-            {params.map_all} \
-            --local 2> {output.bt2_log} | \
-                samtools view -bSF4 - > {output.mapped_bam_file}
+        bwa mem -t {params.threads} {params.reference} {input.p1} {input.p2} | samtools sort | samtools view -F 4 -o {output.mapped_bam_file}
         """
 
 rule sort:

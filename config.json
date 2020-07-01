@@ -27,15 +27,15 @@
     },
     "params":
     {
-        "bowtie2":
+        "bwa":
             {
             "threads": "4",
             "all": "-a",
-            "bowtie2_reference":"tools/reference/bt2-indexes/nCoV-2019"
+            "bwa_reference":"tools/reference/bt2-indexes/nCoV-2019"
             },
         "mpileup":
             {
-            "depth": "500"
+            "depth": "100"
             },
         "ivar":
             {
@@ -43,7 +43,7 @@
             },
         "varscan":
             {
-            "min_cov": "20",
+            "min_cov": "25",
             "snp_qual_threshold": "30",
             "snp_frequency": "0.33"
             }
