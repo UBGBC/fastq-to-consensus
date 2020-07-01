@@ -51,7 +51,6 @@ rule map:
         p2 = rules.trim.output.trimmed_read2
     output:
         mapped_bam_file = config["dir_names"]["mapped_dir"] + "/{sample_id}.bam",
-        bt2_log = config["dir_names"]["mapped_dir"] + "/{sample_id}.log"
     version: config["tool_version"]["bwa"]
     params:
         threads = config["params"]["bwa"]["threads"],
@@ -59,7 +58,7 @@ rule map:
         reference = config["params"]["bwa"]["bwa_reference"]
     shell:
         """
-        bwa mem -t {params.threads} {params.reference} {input.p1} {input.p2} | samtools sort | samtools view -F 4 -o {output.mapped_bam_file}
+        bwa mem -t {params.threads} {params.reference} {input.p1} {input.p2} | samtools view -F 4 -Sb |  samtools sort -T {output.mapped_bam_file}.align -o {output.mapped_bam_file}
         """
 
 rule sort:
@@ -102,7 +101,7 @@ rule second_sort:
 rule pileup:
     input:
         second_sorted_bam = rules.second_sort.output.second_sorted_bam_file,
-        reference = config["params"]["bowtie2"]["bowtie2_reference"]+".fasta"
+        reference = config["params"]["bwa"]["bwa_reference"]
     output:
         pileup = config["dir_names"]["mpileup_dir"] + "/{sample_id}.mpileup"
     params:
@@ -161,7 +160,7 @@ rule vcf_to_consensus:
     input:
         bcf = rules.zip_vcf.output.bcf,
         index = rules.index_bcf.output.index,
-        ref = config["params"]["bowtie2"]["bowtie2_reference"]+".fasta"
+        ref = config["params"]["bwa"]["bwa_reference"]
     output:
         consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.consensus.fasta"
     shell:
