@@ -19,7 +19,7 @@ def get_reverse_primer(sample_id):
     return df.loc[sample_id]["Adapter_2"]
 
 rule all:
-    input:expand("{dir}/{sample_id}.masked_consensus.fasta", dir=config["dir_names"]["consensus_dir"],sample_id=sample_ids)
+    input:expand("{dir}/{sample_id}.consensus.fa", dir=config["dir_names"]["consensus_dir"],sample_id=sample_ids)
     run:
         for sample in sample_ids:
             print("Wrapping up pipeline")
@@ -61,22 +61,9 @@ rule map:
         bwa mem -t {params.threads} {params.reference} {input.p1} {input.p2} | samtools view -F 4 -Sb |  samtools sort -T {output.mapped_bam_file}.align -o {output.mapped_bam_file}
         """
 
-rule sort:
-    input:
-        mapped_bam = rules.map.output.mapped_bam_file
-    output:
-        sorted_bam_file = config["dir_names"]["sorted_dir"] + "/{sample_id}.sorted.bam"
-    shell:
-        """
-        samtools view \
-            -hS {input.mapped_bam} | \
-            samtools sort | \
-            samtools view -hb > {output.sorted_bam_file}
-        """
-
 rule ivar_filter:
     input:
-        sorted_bam = rules.sort.output.sorted_bam_file,
+        sorted_bam = rules.map.output.mapped_bam_file,
         primer_bed = config["params"]["ivar"]["primer_bed"]
     output:
         filtered_bam_file = config["dir_names"]["filtered_dir"] + "/{sample_id}.filtered.bam"
@@ -92,10 +79,7 @@ rule second_sort:
         second_sorted_bam_file = config["dir_names"]["filtered_dir"] + "/{sample_id}.filtered.sorted.bam"
     shell:
         """
-        samtools view \
-            -hS {input.filtered_bam} | \
-            samtools sort | \
-            samtools view -hb > {output.second_sorted_bam_file}
+        samtools view -hb {input.filtered_bam} | samtools sort -T {input.filtered_bam}.tmp -o {output.second_sorted_bam_file}
         """
 
 rule pileup:
@@ -156,47 +140,57 @@ rule index_bcf:
         bcftools index {input}
         """
 
-rule vcf_to_consensus:
-    input:
-        bcf = rules.zip_vcf.output.bcf,
-        index = rules.index_bcf.output.index,
-        ref = config["params"]["bwa"]["bwa_reference"]
-    output:
-        consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.consensus.fasta"
-    shell:
-        """
-        cat {input.ref} | \
-            bcftools consensus {input.bcf} > \
-            {output.consensus_genome}
-        """
-
-rule create_bed_file:
+rule pileup_to_consensus:
     input:
         pileup = rules.pileup.output.pileup
     output:
-        bed_file = config["dir_names"]["varscan_dir"]+"/{sample_id}.bed"
-    params:
-        min_cov = config["params"]["varscan"]["min_cov"],
-        min_freq = config["params"]["varscan"]["snp_frequency"]
+        consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.consensus.fa"
     shell:
         """
-        python tools/seattleflu-scripts/create_bed_file_for_masking.py \
-            --pileup {input.pileup} \
-            --min-cov {params.min_cov} \
-            --min-freq {params.min_freq} \
-            --bed-file {output.bed_file}
+        ivar consensus -m 10 -n N -p {output.consensus_genome} < {input.pileup}
         """
 
-rule mask_consensus:
-    input:
-        consensus_genome = rules.vcf_to_consensus.output.consensus_genome,
-        low_coverage = rules.create_bed_file.output.bed_file
-    output:
-        masked_consensus = config["dir_names"]["consensus_dir"]+"/{sample_id}.masked_consensus.fasta"
-    shell:
-        """
-        bedtools maskfasta \
-            -fi {input.consensus_genome} \
-            -bed {input.low_coverage} \
-            -fo {output.masked_consensus}
-        """
+#rule vcf_to_consensus:
+#    input:
+#        bcf = rules.zip_vcf.output.bcf,
+#        index = rules.index_bcf.output.index,
+#        ref = config["params"]["bwa"]["bwa_reference"]
+#    output:
+#        consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.consensus.fasta"
+#    shell:
+#        """
+#        cat {input.ref} | \
+#            bcftools consensus {input.bcf} > \
+#            {output.consensus_genome}
+#        """
+
+#rule create_bed_file:
+#    input:
+#        pileup = rules.pileup.output.pileup
+#    output:
+#        bed_file = config["dir_names"]["varscan_dir"]+"/{sample_id}.bed"
+#    params:
+#        min_cov = config["params"]["varscan"]["min_cov"],
+#        min_freq = config["params"]["varscan"]["snp_frequency"]
+#    shell:
+#        """
+#        python tools/seattleflu-scripts/create_bed_file_for_masking.py \
+#            --pileup {input.pileup} \
+#            --min-cov {params.min_cov} \
+#            --min-freq {params.min_freq} \
+#            --bed-file {output.bed_file}
+#        """
+
+#rule mask_consensus:
+#    input:
+#        consensus_genome = rules.vcf_to_consensus.output.consensus_genome,
+#        low_coverage = rules.create_bed_file.output.bed_file
+#    output:
+#        masked_consensus = config["dir_names"]["consensus_dir"]+"/{sample_id}.masked_consensus.fasta"
+#    shell:
+#        """
+#        bedtools maskfasta \
+#            -fi {input.consensus_genome} \
+#            -bed {input.low_coverage} \
+#            -fo {output.masked_consensus}
+#        """
