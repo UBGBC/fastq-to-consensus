@@ -43,7 +43,7 @@ rule trim:
     params:
         adapter1=lambda wildcards: get_forward_primer(wildcards.sample_id),
         adapter2=lambda wildcards: get_reverse_primer(wildcards.sample_id)
-    shell: "cutadapt -m 15 -a {params.adapter1} -A {params.adapter2} -n 2 -o {output.trimmed_read1} -p {output.trimmed_read2} {input.all_read1} {input.all_read2} 2>{output.trimmed_stats}"
+    shell: "cutadapt -m 15 -a {params.adapter1} -A {params.adapter2} -n 2 -o {output.trimmed_read1} -p {output.trimmed_read2} {input.all_read1} {input.all_read2} >{output.trimmed_stats}"
 
 rule map:
     input:
@@ -120,8 +120,6 @@ rule call_snps:
             --variants \
             --output-vcf 1 > {output.vcf}
         """
-
-        
         
 rule zip_vcf:
     input:
@@ -145,7 +143,8 @@ rule index_bcf:
 
 rule pileup_to_consensus:
     input:
-        pileup = rules.pileup.output.pileup
+        pileup = rules.pileup.output.pileup,
+        vcf = rules.call_snps.output.vcf
     output:
         consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.consensus.fa"
     shell:
