@@ -10,15 +10,10 @@ Handles the preprocessing from illumina fastq files throught to consensus genome
 
 <h3>Currently Loaded Modules:</h3>
 
-  `1) gbc-samtools/1.7`
-  `2) gbc-bowtie2/2.4.1`
-  `3) gbc-cutadapt/1.16`
-  `4) htslib/1.2.1`
-  `5) gbc-bcftools/1.9`
-  `6) gbc-bedtools/2.25.0`
+  1) gcc/10.2.0   2) gbc-ivar/1.2.4   3) gbc-samtools/1.10   4) gbc-bowtie2/2.4.1   5) gbc-cutadapt/1.16   6) htslib/1.2.1   7) gbc-bcftools/1.9   8) gbc-bedtools/2.29.1   9) bwa/0.7.17
   
-  module load gbc-samtools/1.10 gbc-bowtie2/2.4.1 gbc-cutadapt/1.16 htslib/1.2.1 gbc-bcftools/1.9 gbc-bedtools/2.29.1
-
+  module load gbc-ivar gbc-samtools gbc-bowtie2 gbc-cutadapt htslib gbc-bcftools gbc-bedtools bwa
+  
   
 <h3> Step-by-step of install and analysis </h3>
 1. Navigate to the new flowcell data output.
