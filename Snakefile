@@ -111,15 +111,18 @@ rule call_snps:
         snp_frequency = config["params"]["varscan"]["snp_frequency"]
     shell:
         """
-        java -jar tools/varscan/VarScan.v2.3.9.jar mpileup2snp \
+        java -jar tools/varscan/VarScan.v2.3.9.jar mpileup2cns \
             {input.pileup} \
             --min-coverage {params.min_cov} \
             --min-avg-qual {params.snp_qual_threshold} \
             --min-var-freq {params.snp_frequency} \
-            --strand-filter 1 \
+            --strand-filter 0 \
+            --variants \
             --output-vcf 1 > {output.vcf}
         """
 
+        
+        
 rule zip_vcf:
     input:
         vcf = rules.call_snps.output.vcf
