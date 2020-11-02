@@ -17,6 +17,9 @@ Handles the preprocessing from illumina fastq files throught to consensus genome
   `5) gbc-bcftools/1.9`
   `6) gbc-bedtools/2.25.0`
   
+  module load gbc-samtools/1.10 gbc-bowtie2/2.4.1 gbc-cutadapt/1.16 htslib/1.2.1 gbc-bcftools/1.9 gbc-bedtools/2.29.1
+
+  
 <h3> Step-by-step of install and analysis </h3>
 1. Navigate to the new flowcell data output.
 
