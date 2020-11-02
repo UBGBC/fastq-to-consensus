@@ -46,7 +46,7 @@
             {
             "min_cov": "25",
             "snp_qual_threshold": "30",
-            "snp_frequency": "0.33"
+            "snp_frequency": "0.5"
             }
     }
 }
