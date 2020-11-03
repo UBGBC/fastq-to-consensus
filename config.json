@@ -44,9 +44,9 @@
             },
         "varscan":
             {
-            "min_cov": "25",
+            "min_cov": "50",
             "snp_qual_threshold": "30",
-            "snp_frequency": "0.5"
+            "snp_frequency": "0.33"
             }
     }
 }
