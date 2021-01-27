@@ -90,7 +90,8 @@ rule pileup:
         pileup = config["dir_names"]["mpileup_dir"] + "/{sample_id}.mpileup"
     params:
         depth = config["params"]["mpileup"]["depth"],
-        min_base_qual = config["params"]["varscan"]["snp_qual_threshold"]
+        min_base_qual = config["params"]["varscan"]["snp_qual_threshold"],
+        min_base_cov = config["params"]["varscan"]["min_cov"]
     shell:
         """
         bcftools mpileup -A \
