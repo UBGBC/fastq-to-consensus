@@ -93,33 +93,53 @@ rule pileup:
         min_base_qual = config["params"]["varscan"]["snp_qual_threshold"]
     shell:
         """
-        samtools mpileup -a -A \
+        bcftools mpileup -A \
             -Q {params.min_base_qual} \
             -d {params.depth} \
-            {input.second_sorted_bam} > {output.pileup} \
-            -f {input.reference}
+            -f {input.reference} \
+            {input.second_sorted_bam} > {output.pileup} 
         """
 
 rule call_snps:
     input:
-        pileup = rules.pileup.output.pileup
+        pileup = rules.pileup.output.pileup,
+        second_sorted_bam = rules.second_sort.output.second_sorted_bam_file,
+        reference = config["params"]["bwa"]["bwa_reference"]
     output:
-        vcf = config["dir_names"]["varscan_dir"] +"/{sample_id}.vcf"
+        vcf = config["dir_names"]["varscan_dir"] + "/{sample_id}.vcf.gz"
     params:
-        min_cov = config["params"]["varscan"]["min_cov"],
-        snp_qual_threshold = config["params"]["varscan"]["snp_qual_threshold"],
-        snp_frequency = config["params"]["varscan"]["snp_frequency"]
+        depth = config["params"]["mpileup"]["depth"],
+        min_base_qual = config["params"]["varscan"]["snp_qual_threshold"]
     shell:
         """
-        java -jar tools/varscan/VarScan.v2.3.9.jar mpileup2cns \
-            {input.pileup} \
-            --min-coverage {params.min_cov} \
-            --min-avg-qual {params.snp_qual_threshold} \
-            --min-var-freq {params.snp_frequency} \
-            --strand-filter 0 \
-            --variants \
-            --output-vcf 1 > {output.vcf}
+        bcftools mpileup -A \
+            -Q {params.min_base_qual} \
+            -d {params.depth} \
+            -f {input.reference} \
+            -Ou \
+            {input.second_sorted_bam} | bcftools call -Ou -mv | bcftools norm -f {input.reference} -Oz -o {output.vcf}
         """
+
+#rule call_snps:
+#    input:
+#        pileup = rules.pileup.output.pileup
+#    output:
+#        vcf = config["dir_names"]["varscan_dir"] +"/{sample_id}.vcf"
+#    params:
+#        min_cov = config["params"]["varscan"]["min_cov"],
+#        snp_qual_threshold = config["params"]["varscan"]["snp_qual_threshold"],
+#        snp_frequency = config["params"]["varscan"]["snp_frequency"]
+#    shell:
+#        """
+#        java -jar tools/varscan/VarScan.v2.3.9.jar mpileup2cns \
+#            {input.pileup} \
+#            --min-coverage {params.min_cov} \
+#            --min-avg-qual {params.snp_qual_threshold} \
+#            --min-var-freq {params.snp_frequency} \
+#            --strand-filter 0 \
+#            --variants \
+#            --output-vcf 1 > {output.vcf}
+#        """
         
 rule zip_vcf:
     input:
@@ -128,28 +148,31 @@ rule zip_vcf:
         bcf = config["dir_names"]["varscan_dir"]+"/{sample_id}.vcf.gz"
     shell:
         """
-        bgzip {input.vcf}
+        bgzip -c {input.vcf} > {output.bcf}
         """
 
 rule index_bcf:
     input:
-        bcf = rules.zip_vcf.output.bcf
+        vcf = rules.call_snps.output.vcf
     output:
-        index = config["dir_names"]["varscan_dir"]+"/{sample_id}.vcf.gz.csi"
+        index = config["dir_names"]["varscan_dir"]+"/{sample_id}.vcf.gz.tbi"
     shell:
         """
-        bcftools index {input}
+        tabix {input.vcf}
         """
 
 rule pileup_to_consensus:
     input:
         pileup = rules.pileup.output.pileup,
-        vcf = rules.call_snps.output.vcf
+        vcf = rules.call_snps.output.vcf,
+        index = rules.index_bcf.output.index,
+        reference = config["params"]["bwa"]["bwa_reference"]
     output:
         consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.consensus.fa"
     shell:
         """
-        ivar consensus -m 10 -n N -p {output.consensus_genome} < {input.pileup}
+        bcftools consensus -f {input.reference} {input.vcf} > {output.consensus_genome}
+        #ivar consensus -m 10 -n N -p {output.consensus_genome} < {input.pileup}
         """
 
 #rule vcf_to_consensus:
