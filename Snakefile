@@ -111,13 +111,15 @@ rule call_snps:
         depth = config["params"]["mpileup"]["depth"],
         min_base_qual = config["params"]["varscan"]["snp_qual_threshold"]
     shell:
-        """
+        """   
         bcftools mpileup -A \
             -Q {params.min_base_qual} \
             -d {params.depth} \
             -f {input.reference} \
             -Ou \
-            {input.second_sorted_bam} | bcftools call -Ou -mv | bcftools norm -f {input.reference} -Oz -o {output.vcf}
+            {input.second_sorted_bam} | bcftools call -Ou -mv | bcftools norm -f {input.reference} -Ou | bcftools filter -i 'QUAL>{params.min_base_qual} && DP>{params.min_base_cov}' -Oz -o
+ {output.vcf}
+
         """
 
 #rule call_snps:
