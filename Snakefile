@@ -90,13 +90,12 @@ rule pileup:
         pileup = config["dir_names"]["mpileup_dir"] + "/{sample_id}.mpileup"
     params:
         depth = config["params"]["mpileup"]["depth"],
-        min_base_qual = config["params"]["varscan"]["snp_qual_threshold"],
-        min_base_cov = config["params"]["varscan"]["min_cov"]
+        min_base_qual = config["params"]["varscan"]["snp_qual_threshold"]
     shell:
         """
         bcftools mpileup -A \
             -Q {params.min_base_qual} \
-            -d {params.depth} \
+            --max-depth 5000000 -L 5000000\
             -f {input.reference} \
             {input.second_sorted_bam} > {output.pileup} 
         """
@@ -110,17 +109,18 @@ rule call_snps:
         vcf = config["dir_names"]["varscan_dir"] + "/{sample_id}.vcf.gz"
     params:
         depth = config["params"]["mpileup"]["depth"],
-        min_base_qual = config["params"]["varscan"]["snp_qual_threshold"]
+        min_base_qual = config["params"]["varscan"]["snp_qual_threshold"],
+        min_base_cov = config["params"]["varscan"]["min_cov"]
     shell:
-        """   
+        """
         bcftools mpileup -A \
             -Q {params.min_base_qual} \
-            -d {params.depth} \
-            -f {input.reference} \
+            -f {input.reference} -L 5000000 --max-depth 5000000 \
             -Ou \
-            {input.second_sorted_bam} | bcftools call -Ou -mv | bcftools norm -f {input.reference} -Ou | bcftools filter -i 'QUAL>{params.min_base_qual} && DP>{params.min_base_cov}' -Oz -o
- {output.vcf}
-
+            {input.second_sorted_bam} |\
+         bcftools call -Ou -mv --ploidy 1 |\
+         bcftools norm -f {input.reference} -Ou |
+         bcftools filter --include '(TYPE="INDEL" && IMF>.3) || (TYPE="SNP" && DP > {params.min_base_cov})' -Oz -o {output.vcf}
         """
 
 #rule call_snps:
