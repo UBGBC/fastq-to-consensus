@@ -118,9 +118,9 @@ rule call_snps:
             -f {input.reference} -L 5000000 --max-depth 5000000 \
             -Ou \
             {input.second_sorted_bam} |\
-         bcftools call -Ou -mv --ploidy 1 |\
+         bcftools call -Ou -mv |\
          bcftools norm -f {input.reference} -Ou |
-         bcftools filter --include '(TYPE="INDEL" && IMF>.3) || (TYPE="SNP" && DP > {params.min_base_cov})' -Oz -o {output.vcf}
+         bcftools filter --include '(TYPE="INDEL" && IMF >.3 && IDV > 30) || (TYPE="SNP" && DP > {params.min_base_cov})' -Oz -o {output.vcf}
         """
 
 #rule call_snps:
