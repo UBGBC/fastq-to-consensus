@@ -1,11 +1,12 @@
-This pipeline is a heavily modified aggregation of two github repositories:
+This pipeline is designed to process COVID-19 sequencing data generated at the UB Genomics and Bioinformatics Core Facility (http://ubnextgenlab02.cbi.buffalo.edu). We are operating on illumina MiSeq and NovaSeq short-read sequencing data. Modules loaded are custom to University at Buffalo Center for Computational Research (CCR) though are all open source and freely available. 
 
-https://github.com/seattleflu/
-https://github.com/jebard/fastq-to-treat
+authors: Jonathan Bard (jbard at buffalo dot edu) , Brandon Marzullo , Dr. Natalie Lamb
+
+<h2>Implementation</h2>
+Snakemake drives this pipeline and submits individual processing jobs to our SLURM analysis cluster. Adapters are removed using Cutadapt, prior to mapping to the COVID-19 reference genome using bwa mem. Ivar then filteres our alignment files to mask ARCTIC primer locations, to avoid calling variants originating from primer oligonucleotides. Variant calling is handled bcftools with parameters -Q {quality filter} , -A (orphan reads), -L {max.depth for indel calling} and --max-depth {max.depth}, to ensure full use of our data. In addition, INDELs require the vcf flag IMF > .3 and  IDV > {min_base_cov} , while SNPs require DP > {min_base_cov}. These ensure we detect snp and INDELs with at least a specified minimum read depth. Bcftools commands: mpileup -> call -> norm -> filter. Lastly prior to consensus calling, a per-base-pair depth calculation using bedtools genomecov produces a low-depth masking file which is provided to bcftools consensus along with the reference, variant calls to ensure accurate consensus genome calls.
 
 
-
-<h1># fastq-to-consensus</h1>
+<h1># fastq-to-consensus step-by-step</h1>
 Handles the preprocessing from illumina fastq files throught to consensus genome fasta as compared to a reference genome
 
 <h3>Currently Loaded Modules:</h3>
