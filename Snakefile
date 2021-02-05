@@ -122,28 +122,7 @@ rule call_snps:
          bcftools norm -f {input.reference} -Ou |
          bcftools filter --include '(TYPE="INDEL" && IMF >.3 && IDV > 30) || (TYPE="SNP" && DP > {params.min_base_cov})' -Oz -o {output.vcf}
         """
-
-#rule call_snps_varscan:
-#    input:
-#        pileup = rules.pileup.output.pileup
-#    output:
-#        vcf = config["dir_names"]["varscan_dir"] +"/{sample_id}.varscan.vcf"
-#    params:
-#        min_cov = config["params"]["varscan"]["min_cov"],
-#        snp_qual_threshold = config["params"]["varscan"]["snp_qual_threshold"],
-#        snp_frequency = config["params"]["varscan"]["snp_frequency"]
-#    shell:
-#        """
-#        java -jar tools/varscan/VarScan.v2.3.9.jar mpileup2cns \
-#            {input.pileup} \
-#            --min-coverage {params.min_cov} \
-#            --min-avg-qual {params.snp_qual_threshold} \
-#            --min-var-freq {params.snp_frequency} \
-#            --strand-filter 0 \
-#            --variants \
-#            --output-vcf 1 > {output.vcf}
-#        """
-
+      
 rule zip_vcf:
     input:
         vcf = rules.call_snps.output.vcf
@@ -191,51 +170,3 @@ rule mask_consensus:
         """
         bcftools consensus -f {params.reference} -m {input.bed_file} {input.vcf} > {output.consensus_genome}
         """
-
-#rule vcf_to_consensus:
-#    input:
-#        bcf = rules.zip_vcf.output.bcf,
-#        index = rules.index_bcf.output.index,
-#        ref = config["params"]["bwa"]["bwa_reference"]
-#    output:
-#        consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.consensus.fasta"
-#    shell:
-#        """
-#        cat {input.ref} | \
-#            bcftools consensus {input.bcf} > \
-#            {output.consensus_genome}
-##        """
-
-#rule create_bed_file:
-#    input:
-#        pileup = rules.pileup_to_consensus.output.pileup,
-#        second_sorted_bam = rules.second_sort.output.second_sorted_bam_file
-#    output:
-#        bed_file = config["dir_names"]["varscan_dir"]+"/{sample_id}.bed"
-#    params:
-#        min_cov = config["params"]["varscan"]["min_cov"],
-#        min_freq = config["params"]["varscan"]["snp_frequency"],
-#        ref = config["params"]["bwa"]["bwa_reference"]
-#    shell:
-#        """
-#        #samtools mpileup -a -d 5000000 -f {params.ref} {input.second_sorted_bam} > {input.pileup}.samtools;
-#        python tools/seattleflu-scripts/create_bed_file_for_masking.py \
-#            --pileup {input.pileup} \
-#            --min-cov {params.min_cov} \
-#            --min-freq {params.min_freq} \
-#            --bed-file {output.bed_file}
-#        """
-
-#rule mask_consensus:
-#    input:
-#        consensus_genome = rules.pileup_to_consensus.output.consensus_genome,
-#        low_coverage = rules.create_bed_file.output.bed_file
-#    output:
-#        masked_consensus = config["dir_names"]["consensus_dir"]+"/{sample_id}.masked_consensus.fasta"
-#    shell:
-#        """
-#        bedtools maskfasta \
-#            -fi {input.consensus_genome} \
-#            -bed {input.low_coverage} \
-#            -fo {output.masked_consensus}
-#        """
