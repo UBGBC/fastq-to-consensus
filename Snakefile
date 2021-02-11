@@ -1,3 +1,4 @@
+#!/usr/bin/py
 import pandas as pd
 import os
 
@@ -114,6 +115,7 @@ rule call_snps:
     shell:
         """
         bcftools mpileup -A \
+            -a "INFO/AD,INFO/ADF,INFO/ADR,FORMAT/ADF,FORMAT/ADR,FORMAT/SP"\
             -Q {params.min_base_qual} \
             -f {input.reference} -L 5000000 --max-depth 5000000 \
             -Ou \
@@ -122,25 +124,28 @@ rule call_snps:
          bcftools norm -f {input.reference} -Ou |
          bcftools filter --include '(TYPE="INDEL" && IMF >.3 && IDV > 30) || (TYPE="SNP" && DP > {params.min_base_cov})' -Oz -o {output.vcf}
         """
-      
-rule zip_vcf:
+
+rule call_consensus_snps:
     input:
         vcf = rules.call_snps.output.vcf
     output:
-        bcf = config["dir_names"]["varscan_dir"]+"/{sample_id}.vcf.gz"
+        consensus_vcf = config["dir_names"]["varscan_dir"] + "/{sample_id}.consensus.vcf.gz"
     shell:
         """
-        bgzip -c {input.vcf} > {output.bcf}
+        bcftools filter --exclude '(AD[0])/ (AD[0] + AD[1]) >= 0.5' {input.vcf} -Oz -o {output.consensus_vcf}
         """
 
 rule index_bcf:
     input:
-        vcf = rules.call_snps.output.vcf
+        vcf = rules.call_snps.output.vcf,
+        consensus_vcf = rules.call_consensus_snps.output.consensus_vcf
     output:
-        index = config["dir_names"]["varscan_dir"]+"/{sample_id}.vcf.gz.tbi"
+        index = config["dir_names"]["varscan_dir"]+"/{sample_id}.vcf.gz.tbi",
+        consensus_index = config["dir_names"]["varscan_dir"]+"/{sample_id}.consensus.vcf.gz.tbi"
     shell:
         """
-        tabix {input.vcf}
+        tabix -f {input.vcf} > {output.index};
+        tabix -f {input.consensus_vcf} > {output.consensus_index};
         """
 
 rule bedtools_mask:
@@ -158,9 +163,9 @@ rule bedtools_mask:
 
 rule mask_consensus:
     input:
-        vcf = rules.call_snps.output.vcf,
-        index = rules.index_bcf.output.index,
+        vcf = rules.call_consensus_snps.output.consensus_vcf,
         second_sorted_bam = rules.second_sort.output.second_sorted_bam_file,
+        index = rules.index_bcf.output.consensus_index,
         bed_file = rules.bedtools_mask.output.bed_file
     output:
         consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.masked_consensus.fasta"
