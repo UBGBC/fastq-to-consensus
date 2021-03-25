@@ -49,3 +49,4 @@ Consensus file fasta headers need to be renamed  --
 
 `for i in $(ls *consensus.fasta | cut -f1 -d"." | cut -f2 -d"_"); do echo "sed -i 's/>.*/>USA\/WNY\/UB-$i\/2020/'  ECPHL_$i.masked_consensus.fasta "; done > rename.cmds.txt`
 
+`for i in $(ls *consensus.fasta | cut -f1 -d"." | cut -f2 -d"_"); do echo "sed -i 's/>.*/>USA\/WNY\/$i\/2021/' $i.masked_consensus.fasta "; done > rename.cmds.txt`
