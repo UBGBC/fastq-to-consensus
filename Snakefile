@@ -71,6 +71,9 @@ rule ivar_filter:
     shell:
         """
         ivar trim -i {input.sorted_bam} -b {input.primer_bed} -p {output.filtered_bam_file}
+        
+        ### IF NEB KIT UNCOMMENT BELOW and comment ABOVE LINE
+        ### ivar trim -e -k -i {input.sorted_bam} -b {input.primer_bed} -p {output.filtered_bam_file}
         """
 
 rule second_sort:
