@@ -46,6 +46,4 @@ Handles the preprocessing from illumina fastq files throught to consensus genome
 
 Consensus file fasta headers need to be renamed  --
 
-`for i in $(ls *consensus.fasta | cut -f1 -d"." | cut -f2 -d"_"); do echo "sed -i 's/>.*/>USA\/WNY\/UB-$i\/2020/'  ECPHL_$i.masked_consensus.fasta "; done > rename.cmds.txt`
-
-`for i in $(ls *consensus.fasta | cut -f1 -d"." | cut -f2 -d"_"); do echo "sed -i 's/>.*/>USA\/WNY\/$i\/2021/' $i.masked_consensus.fasta "; done > rename.cmds.txt`
+`for i in $(ls *masked_consensus.fasta | cut -f1 -d"."); do echo "sed -i 's/>MN908947\.3/>hCov-19\/USA\/NY-$i\/2021/' $i.masked_consensus.fasta ";done > cmds.txt`
