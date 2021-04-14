@@ -39,8 +39,7 @@ Handles the preprocessing from illumina fastq files throught to consensus genome
 
 ### The use of --latency-wait allows for SLURM to catch up writing the files and posting the file handles so Snakemake can see them.
 
-    `snakemake --latency-wait 120 -p -j 100 --cluster-config cluster.json --cluster "sbatch --partition gbc --cluster faculty --qos gbc --account gbcstaff"`
-   
+    `snakemake --latency-wait 120 -p -j 100 --profile slurm`  
 
 7. Pipeline should result in a consensus.fasta file per sample
 
