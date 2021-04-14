@@ -28,6 +28,7 @@ rule all:
 rule mkdir:
     output: touch(config["file_names"]["mkdir_done"])
     params: dirs = list(config["dir_names"].values())
+    resources: time_min=10, mem_mb=2000, cpus=1
     shell: "mkdir -p {params.dirs}"
 
 rule trim:
@@ -35,6 +36,7 @@ rule trim:
         rules.mkdir.output,
         all_read1 = lambda wildcards: get_pair_gz(wildcards.sample_id)[0],
         all_read2 = lambda wildcards: get_pair_gz(wildcards.sample_id)[1]
+    resources: time_min=360, mem_mb=2000, cpus=1
     output: 
         trimmed_read1 = config["dir_names"]["trimmed_dir"] + "/{sample_id}.trimmed.R1.fastq.gz",
         trimmed_read2 = config["dir_names"]["trimmed_dir"] + "/{sample_id}.trimmed.R2.fastq.gz",
@@ -53,6 +55,7 @@ rule map:
     output:
         mapped_bam_file = config["dir_names"]["mapped_dir"] + "/{sample_id}.bam",
     version: config["tool_version"]["bwa"]
+    resources: time_min=360, mem_mb=20000, cpus=6
     params:
         threads = config["params"]["bwa"]["threads"],
         map_all = config["params"]["bwa"]["all"],
@@ -68,12 +71,12 @@ rule ivar_filter:
         primer_bed = config["params"]["ivar"]["primer_bed"]
     output:
         filtered_bam_file = config["dir_names"]["filtered_dir"] + "/{sample_id}.filtered.bam"
+    resources: time_min=360, mem_mb=20000, cpus=6
     shell:
         """
-        ivar trim -i {input.sorted_bam} -b {input.primer_bed} -p {output.filtered_bam_file}
-        
-        ### IF NEB KIT UNCOMMENT BELOW and comment ABOVE LINE
-        ### ivar trim -e -k -i {input.sorted_bam} -b {input.primer_bed} -p {output.filtered_bam_file}
+        #ivar trim -i {input.sorted_bam} -b {input.primer_bed} -p {output.filtered_bam_file}
+        ### IF FRAGMENTATION BASED NEB KIT UNCOMMENT BELOW and comment ABOVE LINE
+         ivar trim -e -k -i {input.sorted_bam} -b {input.primer_bed} -p {output.filtered_bam_file}
         """
 
 rule second_sort:
@@ -81,6 +84,7 @@ rule second_sort:
         filtered_bam = rules.ivar_filter.output.filtered_bam_file
     output:
         second_sorted_bam_file = config["dir_names"]["filtered_dir"] + "/{sample_id}.filtered.sorted.bam"
+    resources: time_min=360, mem_mb=20000, cpus=1
     shell:
         """
         samtools view -hb {input.filtered_bam} | samtools sort -T {input.filtered_bam}.tmp -o {output.second_sorted_bam_file}
@@ -95,6 +99,7 @@ rule pileup:
     params:
         depth = config["params"]["mpileup"]["depth"],
         min_base_qual = config["params"]["varscan"]["snp_qual_threshold"]
+    resources: time_min=360, mem_mb=10000, cpus=1
     shell:
         """
         bcftools mpileup -A \
@@ -115,6 +120,7 @@ rule call_snps:
         depth = config["params"]["mpileup"]["depth"],
         min_base_qual = config["params"]["varscan"]["snp_qual_threshold"],
         min_base_cov = config["params"]["varscan"]["min_cov"]
+    resources: time_min=360, mem_mb=10000, cpus=1
     shell:
         """
         bcftools mpileup -A \
@@ -133,6 +139,7 @@ rule call_consensus_snps:
         vcf = rules.call_snps.output.vcf
     output:
         consensus_vcf = config["dir_names"]["varscan_dir"] + "/{sample_id}.consensus.vcf.gz"
+    resources: time_min=360, mem_mb=10000, cpus=1
     shell:
         """
         bcftools filter --exclude '(AD[0])/ (AD[0] + AD[1]) >= 0.5' {input.vcf} -Oz -o {output.consensus_vcf}
@@ -145,6 +152,7 @@ rule index_bcf:
     output:
         index = config["dir_names"]["varscan_dir"]+"/{sample_id}.vcf.gz.tbi",
         consensus_index = config["dir_names"]["varscan_dir"]+"/{sample_id}.consensus.vcf.gz.tbi"
+    resources: time_min=360, mem_mb=10000, cpus=1
     shell:
         """
         tabix -f {input.vcf} > {output.index};
@@ -157,6 +165,7 @@ rule bedtools_mask:
         vcf = rules.call_snps.output.vcf
     output:
         bed_file = config["dir_names"]["varscan_dir"]+"/{sample_id}.bed"
+    resources: time_min=360, mem_mb=10000, cpus=1
     shell:
         """
         bedtools genomecov -ibam {input.second_sorted_bam} -bga |\
@@ -172,6 +181,7 @@ rule mask_consensus:
         bed_file = rules.bedtools_mask.output.bed_file
     output:
         consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.masked_consensus.fasta"
+    resources: time_min=360, mem_mb=10000, cpus=1
     params:
         reference = config["params"]["bwa"]["bwa_reference"]
     shell:
