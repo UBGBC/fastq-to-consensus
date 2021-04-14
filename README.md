@@ -1,4 +1,4 @@
-This pipeline is designed to process COVID-19 sequencing data generated at the UB Genomics and Bioinformatics Core Facility (http://ubnextgenlab02.cbi.buffalo.edu). We are operating on illumina MiSeq and NovaSeq short-read sequencing data. Modules loaded are custom to University at Buffalo Center for Computational Research (CCR) though are all open source and freely available. 
+This pipeline is designed to process COVID-19 sequencing data generated at the UB Genomics and Bioinformatics Core Facility (http://ubnextgencore.buffalo.edu). We are operating on illumina MiSeq and NovaSeq short-read sequencing data. Modules loaded are custom to University at Buffalo Center for Computational Research (CCR) though are all open source and freely available. 
 
 authors: Jonathan Bard (jbard at buffalo dot edu) , Brandon Marzullo , Dr. Natalie Lamb
 
