@@ -19,6 +19,12 @@ def get_forward_primer(sample_id):
 def get_reverse_primer(sample_id):
     return df.loc[sample_id]["Adapter_2"]
 
+def get_year(sample_id):
+    return df.loc[sample_id]["Year"]
+
+def get_date(sample_id):
+    return df.loc[sample_id]["Date"]
+
 rule all:
     input:expand("{dir}/{sample_id}.masked_consensus.fasta", dir=config["dir_names"]["consensus_dir"],sample_id=sample_ids)
     run:
@@ -183,8 +189,11 @@ rule mask_consensus:
         consensus_genome = config["dir_names"]["consensus_dir"]+"/{sample_id}.masked_consensus.fasta"
     resources: time_min=360, mem_mb=10000, cpus=1
     params:
-        reference = config["params"]["bwa"]["bwa_reference"]
+        reference = config["params"]["bwa"]["bwa_reference"],
+        year=lambda wildcards: get_year(wildcards.sample_id),
+        sample="{sample_id}"
     shell:
         """
-        bcftools consensus -f {params.reference} -m {input.bed_file} {input.vcf} > {output.consensus_genome}
+        bcftools consensus -f {params.reference} -m {input.bed_file} {input.vcf} | sed 's/>MN908947\.3/>hCov-19\/USA\/NY-{params.sample}\/{params.year}/' > {output.consensus_genome}
         """
+
