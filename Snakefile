@@ -68,7 +68,7 @@ rule map:
         reference = config["params"]["bwa"]["bwa_reference"]
     shell:
         """
-        bwa mem -t {params.threads} {params.reference} {input.p1} {input.p2} | samtools view -F 4 -Sb |  samtools sort -T {output.mapped_bam_file}.align -o {output.mapped_bam_file}
+        bwa mem -t {params.threads} {params.reference} {input.p1} {input.p2} | samtools view -F 12 -Sb |  samtools sort -T {output.mapped_bam_file}.align -o {output.mapped_bam_file}
         """
 
 rule ivar_filter:
