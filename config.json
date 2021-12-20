@@ -5,7 +5,7 @@
     {
         "pear": "0.9.6",
         "fastx": "0.0.13",
-        "cutadapt": "1.16",
+        "cutadapt": "3.5",
         "samtools": "1.7",
         "bowtie2": "2.4.1",
         "bwa": "0.1.17",
@@ -40,7 +40,7 @@
             },
         "ivar":
             {
-            "primer_bed":"tools/reference/nCoV-2019.bed"
+            "primer_bed":"tools/reference/neb_vss1a.primer.bed"
             },
         "varscan":
             {
