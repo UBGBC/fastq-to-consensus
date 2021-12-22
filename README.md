@@ -44,6 +44,8 @@ Handles the preprocessing from illumina fastq files throught to consensus genome
 7. Pipeline should result in a consensus.fasta file per sample
 
 
+
+### NO LONGER NEEDED ### 
 Consensus file fasta headers need to be renamed  --
 
 `for i in $(ls *masked_consensus.fasta | cut -f1 -d"."); do echo "sed -i 's/>MN908947\.3/>hCov-19\/USA\/NY-$i\/2021/' $i.masked_consensus.fasta ";done > cmds.txt`
