@@ -42,7 +42,7 @@ rule trim:
         rules.mkdir.output,
         all_read1 = lambda wildcards: get_pair_gz(wildcards.sample_id)[0],
         all_read2 = lambda wildcards: get_pair_gz(wildcards.sample_id)[1]
-    resources: time_min=360, mem_mb=2000, cpus=1
+    resources: time_min=360, mem_mb=2000, cpus=4
     output: 
         trimmed_read1 = config["dir_names"]["trimmed_dir"] + "/{sample_id}.trimmed.R1.fastq.gz",
         trimmed_read2 = config["dir_names"]["trimmed_dir"] + "/{sample_id}.trimmed.R2.fastq.gz",
@@ -52,7 +52,7 @@ rule trim:
     params:
         adapter1=lambda wildcards: get_forward_primer(wildcards.sample_id),
         adapter2=lambda wildcards: get_reverse_primer(wildcards.sample_id)
-    shell: "cutadapt -m 15 -a {params.adapter1} -A {params.adapter2} -n 2 -o {output.trimmed_read1} -p {output.trimmed_read2} {input.all_read1} {input.all_read2} >{output.trimmed_stats}"
+    shell: "cutadapt -j 4 -m 15 -a {params.adapter1} -A {params.adapter2} -n 2 -o {output.trimmed_read1} -p {output.trimmed_read2} {input.all_read1} {input.all_read2} >{output.trimmed_stats}"
 
 rule map:
     input:
