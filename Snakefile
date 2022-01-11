@@ -175,7 +175,7 @@ rule bedtools_mask:
     shell:
         """
         bedtools genomecov -ibam {input.second_sorted_bam} -bga |\
-        awk '{{if($4 < 10) print $_}}' |\
+        awk '{{if($4 < 50) print $_}}' |\
         bedtools intersect -v -a - -b {input.vcf} > {output.bed_file}
         """
 
