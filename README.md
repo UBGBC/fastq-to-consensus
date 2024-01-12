@@ -11,7 +11,7 @@ Handles the preprocessing from illumina fastq files throught to consensus genome
 
 <h3>Currently Loaded Modules:</h3>
 
-  `module load gcc/10.2.0 gbc-ivar/1.2.4 gbc-samtools/1.10 gbc-bowtie2/2.4.1 gbc-cutadapt/3.5 htslib/1.2.1 gbc-bcftools/1.9 gbc-bedtools/2.29.1 bwa/0.7.17`
+  `module load gcc/11.2.0 gbc-ivar/1.2.4 gbc-samtools/1.10 gbc-bowtie2/2.4.1 gbc-cutadapt/3.5 htslib/1.2.1 gbc-bcftools/1.9 gbc-bedtools/2.29.1 bwa/0.7.17`
   
 <h3> Step-by-step of install and analysis </h3>
 1. Navigate to the new flowcell data output.
@@ -49,3 +49,9 @@ Handles the preprocessing from illumina fastq files throught to consensus genome
 Consensus file fasta headers need to be renamed  --
 
 `for i in $(ls *masked_consensus.fasta | cut -f1 -d"."); do echo "sed -i 's/>MN908947\.3/>hCov-19\/USA\/NY-$i\/2021/' $i.masked_consensus.fasta ";done > cmds.txt`
+
+
+## Potential errors:
+This is caused by duplicate samples in metadata sheet.
+`TypeError: join() argument must be str or bytes, not 'Series'
+Wildcards:`
