@@ -15,7 +15,7 @@ Snakemake drives this pipeline and submits individual processing jobs to our SLU
 
 `module use /projects/academic/gbcstaff/utils/modules/`
 
-`module load gcc/11.2.0 samtools/1.16.1 bowtie2/2.4.4 gbc-cutadapt/3.5 htslib/1.14 bcftools/1.14 bedtools/2.30.0 bwa/0.7.17`
+`module load gcc/11.2.0 openmpi/4.1.1 snakemake/7.18.2 gbc-anaconda/3.6 samtools/1.16.1 bowtie2/2.4.4 gbc-cutadapt/3.5 htslib/1.14 bcftools/1.14 bedtools/2.30.0 bwa/0.7.17`
 
 `export LD_LIBRARY_PATH=/projects/academic/gbcstaff/utils/ivar-2024/htslib/lib/:/cvmfs/soft.ccr.buffalo.edu/versions/2022.05/easybuild/software/Core/gcccore/11.2.0/lib64/:/cvmfs/soft.ccr.buffalo.edu/versions/2022.05/easybuild/software/Core/gcccore/11.2.0/lib64/:/cvmfs/soft.ccr.buffalo.edu/versions/2023.01/compat/lib64/libc.so.6`
 
