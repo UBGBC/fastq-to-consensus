@@ -40,7 +40,7 @@
             },
         "ivar":
             {
-            "primer_bed":"tools/reference/neb_vss1a.primer.bed"
+            "primer_bed":"tools/reference/VarSkip_2e.sort.bed"
             },
         "varscan":
             {
